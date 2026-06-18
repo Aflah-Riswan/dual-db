@@ -1,7 +1,7 @@
 import { User } from "../../domain/entities/User.js";
 import type { IUserRepo } from "../../domain/repositories/repo.user.js";
 
-export class SyncUserUserCase {
+export class SyncUserUseCase {
   constructor(private readonly mongoRepository: IUserRepo) {}
   async execute(userData: any): Promise<void> {
     const userEntity = new User(
