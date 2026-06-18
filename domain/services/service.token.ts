@@ -1,6 +1,6 @@
 
 export interface IUserPayload {
-   id : string,
+   id : number,
    email : string,
    role : string
 }
