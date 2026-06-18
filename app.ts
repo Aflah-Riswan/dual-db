@@ -23,8 +23,8 @@ async function bootstrap() {
   const encryptionService = new BcryptEncryptionService();
   const tokenService = new JwtTokenService();
 
-  await mongoose.connect(process.env.MONGO_DB_URL || 'mongodb://127.0.0.1:27017/dual_db_project');
-  await rabbitService.initialize(process.env.RABBITMQ_URL || 'amqp://guest:guest@localhost:5672');
+  await mongoose.connect(process.env.MONGO_DB_URL!);
+  await rabbitService.initialize(process.env.RABBITMQ_URL!);
 
   const createUserUseCase = new CreateUserUseCase(sqlRepo, rabbitService, encryptionService);
   const adminCrudUseCase = new AdminCrudUseCase(sqlRepo, rabbitService);
@@ -35,21 +35,21 @@ async function bootstrap() {
 
   await rabbitService.consume('user_sync_queue', syncUserUseCase);
 
-  // 🚪 OPEN ROUTES
+  
   app.post('/auth/register', userController.register);
   app.post('/auth/login', userController.login);
 
-  // 👤 USER ROUTE
+ 
   app.get('/user/profile', authMiddleware.authenticate, userController.getProfile);
 
-  // 🔑 ADMIN PROTECTED ROUTES (CRUD)
+
   const adminRouter = express.Router();
   adminRouter.use(authMiddleware.authenticate, authMiddleware.authorize(['admin']));
   
-  adminRouter.get('/users/sql', userController.adminGetAllSqlUsers);     // Read MySQL
-  adminRouter.get('/users/mongo', userController.adminGetAllMongoUsers); // Read MongoDB
-  adminRouter.put('/users/:id', userController.adminUpdateUser);         // Update
-  adminRouter.delete('/users/:id', userController.adminDeleteUser);      // Delete
+  adminRouter.get('/users/sql', userController.adminGetAllSqlUsers);     
+  adminRouter.get('/users/mongo', userController.adminGetAllMongoUsers); 
+  adminRouter.put('/users/:id', userController.adminUpdateUser);       
+  adminRouter.delete('/users/:id', userController.adminDeleteUser);     
 
   app.use('/admin', adminRouter);
 
