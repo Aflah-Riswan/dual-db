@@ -11,6 +11,9 @@ import { AdminCrudUseCase } from './application/use-cases/AdminUseCase.js';
 import { SyncUserUseCase } from './application/use-cases/SyncUserUseCase.js';
 import { UserController } from './presenters/controllers/userController.js';
 import { AuthMiddleware } from './presenters/middlewares/AuthMiddleware.js';
+import { makeAuthRoutes } from './presenters/routes/authRoutes.js';
+import { makeUserRoutes } from './presenters/routes/userRoutes.js';
+import { makeAdminRoutes } from './presenters/routes/adminRoutes.js';
 
 dotenv.config();
 const app = express();
@@ -36,22 +39,9 @@ async function bootstrap() {
   await rabbitService.consume('user_sync_queue', syncUserUseCase);
 
   
-  app.post('/auth/register', userController.register);
-  app.post('/auth/login', userController.login);
-
- 
-  app.get('/user/profile', authMiddleware.authenticate, userController.getProfile);
-
-
-  const adminRouter = express.Router();
-  adminRouter.use(authMiddleware.authenticate, authMiddleware.authorize(['admin']));
-  
-  adminRouter.get('/users/sql', userController.adminGetAllSqlUsers);     
-  adminRouter.get('/users/mongo', userController.adminGetAllMongoUsers); 
-  adminRouter.put('/users/:id', userController.adminUpdateUser);       
-  adminRouter.delete('/users/:id', userController.adminDeleteUser);     
-
-  app.use('/admin', adminRouter);
+  app.use('/auth', makeAuthRoutes(userController));
+  app.use('/user', makeUserRoutes(userController, authMiddleware));
+  app.use('/admin', makeAdminRoutes(userController, authMiddleware));
 
   app.listen(3000, () => console.log('🚀 Secure Clean Architecture Service Active on Port 3000'));
 }
